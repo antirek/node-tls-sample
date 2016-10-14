@@ -1,0 +1,19 @@
+{
+  "name": "node-tls-sample",
+  "version": "1.0.0",
+  "description": "",
+  "main": "tls-client.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/antirek/node-tls-sample.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/antirek/node-tls-sample/issues"
+  },
+  "homepage": "https://github.com/antirek/node-tls-sample#readme"
+}
