@@ -58,6 +58,18 @@ writer.startSequence();
 writer.writeInt(6);
 writer.endSequence();
 
+function ab2str(buf) {
+  return String.fromCharCode.apply(null, new Uint16Array(buf));
+}
+
+function hex2a(hexx) {
+    var hex = hexx.toString();//force conversion
+    var str = '';
+    for (var i = 0; i < hex.length; i += 2)
+        str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+    return str;
+}
+
 // A secure (TLS) socket server.
 tls.createServer(options, function (s) {
     var intervalId;
@@ -84,6 +96,8 @@ tls.createServer(options, function (s) {
         // message.date = new Date();
         // ms += JSON.stringify(message) + TERM;
         // message.seqNo += 1;
+        var hex = Buffer.from(writer.buffer).toString('hex')
+        console.log(hex, hex2a(hex));
         s.write(writer.buffer);
         // if ((message.seqNo % 100) === 0) {
         //     console.log(process.memoryUsage());

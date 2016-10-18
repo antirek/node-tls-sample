@@ -59,7 +59,8 @@ var TLSClient = function (host, port) {
             if (!self.s.authorized) {
                 console.log("TLS authorization error:", self.s.authorizationError);
             }
-             console.log(self.s.getPeerCertificate());
+             console.log('cert:', self.s.getPeerCertificate());
+             console.log('protocol:', self.s.getProtocol());
         });
 
         self.s.on("error", function (err) {
