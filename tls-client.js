@@ -59,7 +59,7 @@ var TLSClient = function (host, port) {
             if (!self.s.authorized) {
                 console.log("TLS authorization error:", self.s.authorizationError);
             }
-            // console.log(s.getPeerCertificate());
+             console.log(self.s.getPeerCertificate());
         });
 
         self.s.on("error", function (err) {
@@ -72,7 +72,10 @@ var TLSClient = function (host, port) {
             reader.readSequence();
             console.log('Sequence len: ' + reader.length);
             if (reader.peek() === Ber.Boolean)
-                console.log(reader.readBoolean());
+                console.log('bool:', reader.readBoolean());
+            if (reader.peek() === Ber.Integer)
+                console.log('int:', reader.readInt());
+            
             // Split incoming data into messages around TERM
             // var info = data.toString().split(self.TERM);
             //

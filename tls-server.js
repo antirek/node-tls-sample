@@ -49,6 +49,8 @@ var message = {
     longitude: 24.9375,
     seqNo: 0
 };
+
+
 var writer = new Ber.Writer();
 
 writer.startSequence();
