@@ -14,6 +14,7 @@
 // Modules used here
 var tls = require('tls'),
     fs = require('fs');
+var Ber = require('asn1').Ber;
 
 var TERM = '\uFFFD';
 
@@ -21,19 +22,19 @@ var options = {
     // Chain of certificate autorities
     // Client and server have these to authenticate keys 
     ca: [
-          fs.readFileSync('ssl/root-cert.pem'),
-          fs.readFileSync('ssl/ca1-cert.pem'),
-          fs.readFileSync('ssl/ca2-cert.pem'),
-          fs.readFileSync('ssl/ca3-cert.pem'),
-          fs.readFileSync('ssl/ca4-cert.pem')
-        ],
+        fs.readFileSync('ssl/root-cert.pem'),
+        fs.readFileSync('ssl/ca1-cert.pem'),
+        fs.readFileSync('ssl/ca2-cert.pem'),
+        fs.readFileSync('ssl/ca3-cert.pem'),
+        fs.readFileSync('ssl/ca4-cert.pem')
+    ],
     // Private key of the server
     key: fs.readFileSync('ssl/agent1-key.pem'),
     // Public key of the server (certificate key)
     cert: fs.readFileSync('ssl/agent1-cert.pem'),
 
     // Request a certificate from a connecting client
-    requestCert: true, 
+    requestCert: true,
 
     // Automatically reject clients with invalide certificates.
     rejectUnauthorized: false             // Set false to see what happens.
@@ -42,12 +43,18 @@ var options = {
 
 // The data structure to be sent to connected clients
 var message = {
-    tag : 'Helsinki ' /* + String.fromCharCode(65533) */,
-    date : new Date(), 
-    latitude : 60.1708,
-    longitude : 24.9375,
-    seqNo : 0
+    tag: 'Helsinki ' /* + String.fromCharCode(65533) */,
+    date: new Date(),
+    latitude: 60.1708,
+    longitude: 24.9375,
+    seqNo: 0
 };
+var writer = new Ber.Writer();
+
+writer.startSequence();
+// writer.writeBoolean(true);
+writer.writeInt(6);
+writer.endSequence();
 
 // A secure (TLS) socket server.
 tls.createServer(options, function (s) {
@@ -58,33 +65,33 @@ tls.createServer(options, function (s) {
         console.log("TLS authorization error:", s.authorizationError);
     }
 
-    console.log("Cipher: ",  s.getCipher());
+    console.log("Cipher: ", s.getCipher());
     console.log("Address: ", s.address());
     console.log("Remote address: ", s.remoteAddress);
     console.log("Remote port: ", s.remotePort);
     message.seqNo = 0;
     var fragment = '';
- 
+
 
     //console.log(s.getPeerCertificate());
+
     intervalId = setInterval(function () {
-        message.date = new Date();
-        var ms = JSON.stringify(message) + TERM;
-        message.seqNo += 1;
-        message.date = new Date();
-        ms += JSON.stringify(message) + TERM;
-        message.seqNo += 1;
-        s.write(ms);
-        if ((message.seqNo % 100) === 0)
-        {
-            console.log(process.memoryUsage());
-        }
+        // message.date = new Date();
+        // var ms = JSON.stringify(message) + TERM;
+        // message.seqNo += 1;
+        // message.date = new Date();
+        // ms += JSON.stringify(message) + TERM;
+        // message.seqNo += 1;
+        s.write(writer.buffer);
+        // if ((message.seqNo % 100) === 0) {
+        //     console.log(process.memoryUsage());
+        // }
     }, 100);
 
     // Echo data incomming dats from stream back out to stream
     //s.pipe(s);
 
-    s.on('data', function(data) {
+    s.on('data', function (data) {
         // Split incoming data into messages around TERM
         var info = data.toString().split(TERM);
 
@@ -93,7 +100,7 @@ tls.createServer(options, function (s) {
         fragment = '';
 
         // Parse all the messages into objects
-        for ( var index = 0; index < info.length; index++) {
+        for (var index = 0; index < info.length; index++) {
             if (info[index]) {
                 try {
                     var message = JSON.parse(info[index]);

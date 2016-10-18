@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/antirek/node-tls-sample/issues"
   },
-  "homepage": "https://github.com/antirek/node-tls-sample#readme"
+  "homepage": "https://github.com/antirek/node-tls-sample#readme",
+  "dependencies": {
+    "asn1": "^0.2.3"
+  }
 }

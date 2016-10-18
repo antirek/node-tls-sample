@@ -17,6 +17,8 @@ var tls = require('tls'),
     util = require('util'),
     events = require('events');
 
+var Ber = require('asn1').Ber;
+
 // TLS Client object
 var TLSClient = function (host, port) {
 
@@ -24,12 +26,12 @@ var TLSClient = function (host, port) {
         // Chain of certificate autorities
         // Client and server have these to authenticate keys 
         ca: [
-              fs.readFileSync('ssl/root-cert.pem'),
-              fs.readFileSync('ssl/ca1-cert.pem'),
-              fs.readFileSync('ssl/ca2-cert.pem'),
-              fs.readFileSync('ssl/ca3-cert.pem'),
-              fs.readFileSync('ssl/ca4-cert.pem')
-            ],
+            fs.readFileSync('ssl/root-cert.pem'),
+            fs.readFileSync('ssl/ca1-cert.pem'),
+            fs.readFileSync('ssl/ca2-cert.pem'),
+            fs.readFileSync('ssl/ca3-cert.pem'),
+            fs.readFileSync('ssl/ca4-cert.pem')
+        ],
         // Private key of the client
         key: fs.readFileSync('ssl/agent2-key.pem'),
         // Public key of the client (certificate key)
@@ -65,32 +67,38 @@ var TLSClient = function (host, port) {
         });
 
         self.s.on("data", function (data) {
+            var reader = new Ber.Reader(data);
+
+            reader.readSequence();
+            console.log('Sequence len: ' + reader.length);
+            if (reader.peek() === Ber.Boolean)
+                console.log(reader.readBoolean());
             // Split incoming data into messages around TERM
-            var info = data.toString().split(self.TERM);
-
-            // Add any previous trailing chars to the start of the first message
-            info[0] = fragment + info[0];
-            fragment = '';
-
-            // Parse all the messages into objects
-            for ( var index = 0; index < info.length; index++) {
-                if (info[index]) {
-                    try {
-                        var message = JSON.parse(info[index]);
-                        self.emit('message', message);
-                    } catch (error) {
-                        // The last message may be cut short so save its chars for later.
-                        fragment = info[index]; 
-                        continue;
-                    }
-                }
-            }
+            // var info = data.toString().split(self.TERM);
+            //
+            // // Add any previous trailing chars to the start of the first message
+            // info[0] = fragment + info[0];
+            // fragment = '';
+            //
+            // // Parse all the messages into objects
+            // for ( var index = 0; index < info.length; index++) {
+            //     if (info[index]) {
+            //         try {
+            //             var message = JSON.parse(info[index]);
+            //             self.emit('message', message);
+            //         } catch (error) {
+            //             // The last message may be cut short so save its chars for later.
+            //             fragment = info[index];
+            //             continue;
+            //         }
+            //     }
+            // }
         });
 
         self.s.on("end", function () {
-           console.log("End:");
+            console.log("End:");
         });
- 
+
         self.s.on("close", function () {
             console.log("Close:");
             self.emit('disconnect', null);
