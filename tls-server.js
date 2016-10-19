@@ -1,42 +1,10 @@
-//
-// tls-server.js
-//
-// Example of a Transport Layer Security (or TSL) server
-//
-// References:
-//    http://nodejs.org/api/tls.html
-//    http://docs.nodejitsu.com/articles/cryptography/how-to-use-the-tls-module
-//
-
-// Always use JavaScript strict mode. 
 "use strict";
 
-// Modules used here
-var tls = require('tls'),
-    fs = require('fs');
-
+var tls = require('tls');
+var fs = require('fs');
 var asn = require('asn1.js');
-var Human = asn.define('Human', function() {
-    this.seq().obj(
-        this.key('firstName').octstr(),
-        this.key('lastName').octstr(),
-        this.key('age').int(),
-        this.key('gender').enum({ 0: 'male', 1: 'female' }),
-        this.key('bio').seqof(Bio)
-    );
-});
-
-var Bio = asn.define('Bio', function() {
-    this.seq().obj(
-        this.key('time').gentime(),
-        this.key('description').octstr()
-    );
-});
-var TERM = '\uFFFD';
 
 var options = {
-    // Chain of certificate autorities
-    // Client and server have these to authenticate keys 
     ca: [
         fs.readFileSync('ssl/root-cert.pem'),
         fs.readFileSync('ssl/ca1-cert.pem'),
@@ -44,57 +12,14 @@ var options = {
         fs.readFileSync('ssl/ca3-cert.pem'),
         fs.readFileSync('ssl/ca4-cert.pem')
     ],
-    // Private key of the server
     key: fs.readFileSync('ssl/agent1-key.pem'),
-    // Public key of the server (certificate key)
     cert: fs.readFileSync('ssl/agent1-cert.pem'),
-
-    // Request a certificate from a connecting client
     requestCert: true,
-
-    // Automatically reject clients with invalide certificates.
-    rejectUnauthorized: false             // Set false to see what happens.
+    rejectUnauthorized: false
 };
+var models = require('./models');
 
-
-// The data structure to be sent to connected clients
-var message = {
-    tag: 'Helsinki ' /* + String.fromCharCode(65533) */,
-    date: new Date(),
-    latitude: 60.1708,
-    longitude: 24.9375,
-    seqNo: 0
-};
-
-var buffer = Human.encode({
-    firstName: 'Thomas',
-    lastName: 'Anderson',
-    age: 28,
-    gender: 'male',
-    bio: [
-        {
-            time: +new Date('31 March 1999'),
-            description: 'freedom of mind'
-        }
-    ]
-}, 'der');
-
-
-function ab2str(buf) {
-  return String.fromCharCode.apply(null, new Uint16Array(buf));
-}
-
-function hex2a(hexx) {
-    var hex = hexx.toString();//force conversion
-    var str = '';
-    for (var i = 0; i < hex.length; i += 2)
-        str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
-    return str;
-}
-
-// A secure (TLS) socket server.
 tls.createServer(options, function (s) {
-    var intervalId;
 
     console.log("TLS Client authorized:", s.authorized);
     if (!s.authorized) {
@@ -105,53 +30,25 @@ tls.createServer(options, function (s) {
     console.log("Address: ", s.address());
     console.log("Remote address: ", s.remoteAddress);
     console.log("Remote port: ", s.remotePort);
-    message.seqNo = 0;
-    var fragment = '';
-
-
-    //console.log(s.getPeerCertificate());
-    intervalId = setInterval(function () {
-        // message.date = new Date();
-        // var ms = JSON.stringify(message) + TERM;
-        // message.seqNo += 1;
-        // message.date = new Date();
-        // ms += JSON.stringify(message) + TERM;
-        // message.seqNo += 1;
-        s.write(buffer);
-        // if ((message.seqNo % 100) === 0) {
-        //     console.log(process.memoryUsage());
-        // }
-    }, 100);
-
-    // Echo data incomming dats from stream back out to stream
-    //s.pipe(s);
 
     s.on('data', function (data) {
-        // Split incoming data into messages around TERM
-        var info = data.toString().split(TERM);
-
-        // Add any previous trailing chars to the start of the first message
-        info[0] = fragment + info[0];
-        fragment = '';
-
-        // Parse all the messages into objects
-        for (var index = 0; index < info.length; index++) {
-            if (info[index]) {
-                try {
-                    var message = JSON.parse(info[index]);
-                    console.log(message.name);
-                    console.log(message.passwd);
-                } catch (error) {
-                    // The last message may be cut short so save its chars for later.
-                    fragment = info[index];
-                    continue;
-                }
-            }
+        var test=models.ConnectResponse.decode(data, 'der');
+        for (var key in test) {
+            console.log(test[key].toString());
         }
-//        s.socket.end();
+        var ConnectRequest = models.ConnectRequest.decode(data, 'der');
+        for (var key in ConnectRequest) {
+            console.log(ConnectRequest[key].toString());
+        }
+        var ConnectResponse = models.ConnectResponse.encode({
+            'confirmed-data-packet-window-size': ConnectRequest['data-packet-window-size'],
+            'confirmed-session-timeout': ConnectRequest['session-timeout'],
+            'confirmed-data-load-timeout': ConnectRequest['data-load-timeout'],
+            'confirmed-request-response-timeout': ConnectRequest['request-response-timeout']
+        }, 'der');
+        s.write(ConnectResponse)
     });
 
-    // Handle events on the underlying socket
     s.on("error", function (err) {
         console.log("Eeek:", err.toString());
     });
@@ -162,13 +59,6 @@ tls.createServer(options, function (s) {
 
     s.on("close", function () {
 
-        clearInterval(intervalId);
         console.log("Close:");
     });
 }).listen(8000);
-
-
-
-
-
-

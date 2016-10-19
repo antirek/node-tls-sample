@@ -1,48 +1,14 @@
-//
-// tls-client.js
-//
-// Example of a Transport Layer Security (or TSL) client
-//
-// References:
-//    http://nodejs.org/api/tls.html
-//    http://docs.nodejitsu.com/articles/cryptography/how-to-use-the-tls-module
-//
-
-// Always use JavaScript strict mode. 
 "use strict";
-
-// Modules required here
-var tls = require('tls'),
-    fs = require('fs'),
-    util = require('util'),
-    events = require('events');
-
-var asn = require('asn1.js');
-
-var Human = asn.define('Human', function () {
-    this.seq().obj(
-        this.key('firstName').octstr(),
-        this.key('lastName').octstr(),
-        this.key('age').int(),
-        this.key('gender').enum({0: 'male', 1: 'female'}),
-        this.key('bio').seqof(Bio)
-    );
-});
-
-var Bio = asn.define('Bio', function () {
-    this.seq().obj(
-        this.key('time').gentime(),
-        this.key('description').octstr()
-    );
-});
+var tls = require('tls');
+var fs = require('fs');
+var util = require('util');
+var events = require('events');
+var models = require('./models');
 
 
-// TLS Client object
 var TLSClient = function (host, port) {
 
     var options = {
-        // Chain of certificate autorities
-        // Client and server have these to authenticate keys 
         ca: [
             fs.readFileSync('ssl/root-cert.pem'),
             fs.readFileSync('ssl/ca1-cert.pem'),
@@ -50,26 +16,14 @@ var TLSClient = function (host, port) {
             fs.readFileSync('ssl/ca3-cert.pem'),
             fs.readFileSync('ssl/ca4-cert.pem')
         ],
-        // Private key of the client
         key: fs.readFileSync('ssl/agent2-key.pem'),
-        // Public key of the client (certificate key)
         cert: fs.readFileSync('ssl/agent2-cert.pem'),
-
-        // Automatically reject clients with invalid certificates.
         rejectUnauthorized: false             // Set false to see what happens.
     };
-
     var self = this;
-
-    // Incoming JSON chunks are terminated with the Unicode replacement character.
-    this.TERM = '\uFFFD';
-
-    // Call the event emitter constructor.  
     events.EventEmitter.call(this);
 
     var connect = (function connect() {
-        var fragment = '';
-        var s;
         self.s = tls.connect(port, host, options, function () {
             self.emit('connect', null);
 
@@ -86,29 +40,8 @@ var TLSClient = function (host, port) {
         });
 
         self.s.on("data", function (data) {
-
-            var human = Human.decode(data, 'der');
-            console.log(human);
-            // Split incoming data into messages around TERM
-            // var info = data.toString().split(self.TERM);
-            //
-            // // Add any previous trailing chars to the start of the first message
-            // info[0] = fragment + info[0];
-            // fragment = '';
-            //
-            // // Parse all the messages into objects
-            // for ( var index = 0; index < info.length; index++) {
-            //     if (info[index]) {
-            //         try {
-            //             var message = JSON.parse(info[index]);
-            //             self.emit('message', message);
-            //         } catch (error) {
-            //             // The last message may be cut short so save its chars for later.
-            //             fragment = info[index];
-            //             continue;
-            //         }
-            //     }
-            // }
+            var ConnectResponse = models.ConnectResponse.decode(data,'der');
+            console.log('ConnectResponse', ConnectResponse);
         });
 
         self.s.on("end", function () {
@@ -118,24 +51,16 @@ var TLSClient = function (host, port) {
         self.s.on("close", function () {
             console.log("Close:");
             self.emit('disconnect', null);
-
-            // Try to reconnect after a delay
-            setTimeout(function () {
-                connect();
-            }, 1000);
         });
     })();
 };
-
-// TLSClient inherits EventEmitter 
 util.inherits(TLSClient, events.EventEmitter);
 
 TLSClient.prototype.write = function (message) {
     if (this.s.writable) {
-        var data = JSON.stringify(message) + this.TERM;
-        this.s.write(data);
+        this.s.write(message);
     }
-}
+};
 
 module.exports = TLSClient;
 
