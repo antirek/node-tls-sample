@@ -15,7 +15,22 @@
 var tls = require('tls'),
     fs = require('fs');
 var Ber = require('asn1').Ber;
+var merge = require("node.extend");
 
+var common = require("asn1js/org/pkijs/common");
+var _asn1js = require("asn1js");
+var _pkijs = require("pkijs");
+var _x509schema = require("pkijs/org/pkijs/x509_schema");
+
+// #region Merging function/object declarations for ASN1js and PKIjs
+var asn1js = merge(true, _asn1js, common);
+
+var x509schema = merge(true, _x509schema, asn1js);
+
+var pkijs_1 = merge(true, _pkijs, asn1js);
+var pkijs = merge(true, pkijs_1, x509schema);
+var org = pkijs.org;
+var arrayBufferToBuffer = require('arraybuffer-to-buffer')
 var TERM = '\uFFFD';
 
 var options = {
@@ -49,12 +64,16 @@ var message = {
     longitude: 24.9375,
     seqNo: 0
 };
-var writer = new Ber.Writer();
-
-writer.startSequence();
+// var writer = new Ber.Writer();
+//
+// writer.startSequence();
 // writer.writeBoolean(true);
-writer.writeInt(6);
-writer.endSequence();
+// writer.writeInt(6);
+// writer.endSequence();
+var sequence = new org.pkijs.asn1.SEQUENCE();
+sequence.value_block.value.push(new org.pkijs.asn1.INTEGER({value: 12}));
+
+var sequence_buffer = sequence.toBER(false);
 
 // A secure (TLS) socket server.
 tls.createServer(options, function (s) {
@@ -82,7 +101,7 @@ tls.createServer(options, function (s) {
         // message.date = new Date();
         // ms += JSON.stringify(message) + TERM;
         // message.seqNo += 1;
-        s.write(writer.buffer);
+        s.write(arrayBufferToBuffer(sequence_buffer));
         // if ((message.seqNo % 100) === 0) {
         //     console.log(process.memoryUsage());
         // }

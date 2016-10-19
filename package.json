@@ -17,6 +17,10 @@
   },
   "homepage": "https://github.com/antirek/node-tls-sample#readme",
   "dependencies": {
-    "asn1": "^0.2.3"
+    "arraybuffer-to-buffer": "0.0.4",
+    "asn1": "^0.2.3",
+    "buffer-to-arraybuffer": "0.0.4",
+    "node.extend": "^1.1.6",
+    "pkijs": "^1.3.27"
   }
 }

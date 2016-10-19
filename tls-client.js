@@ -17,7 +17,22 @@ var tls = require('tls'),
     util = require('util'),
     events = require('events');
 
-var Ber = require('asn1').Ber;
+var merge = require("node.extend");
+
+var common = require("asn1js/org/pkijs/common");
+var _asn1js = require("asn1js");
+var _pkijs = require("pkijs");
+var _x509schema = require("pkijs/org/pkijs/x509_schema");
+
+// #region Merging function/object declarations for ASN1js and PKIjs
+var asn1js = merge(true, _asn1js, common);
+
+var x509schema = merge(true, _x509schema, asn1js);
+
+var pkijs_1 = merge(true, _pkijs, asn1js);
+var pkijs = merge(true, pkijs_1, x509schema);
+var org = pkijs.org;
+var bufferToArrayBuffer = require('buffer-to-arraybuffer');
 
 // TLS Client object
 var TLSClient = function (host, port) {
@@ -67,12 +82,17 @@ var TLSClient = function (host, port) {
         });
 
         self.s.on("data", function (data) {
-            var reader = new Ber.Reader(data);
-
-            reader.readSequence();
-            console.log('Sequence len: ' + reader.length);
-            if (reader.peek() === Ber.Boolean)
-                console.log(reader.readBoolean());
+            console.log(data);
+            console.log(data.toString());
+            var fromber=org.pkijs.fromBER(bufferToArrayBuffer(data));
+            console.log('fromber',fromber.result.value_block.value[0].value_block.value_dec);
+            //
+            // var reader = new Ber.Reader(data);
+            //
+            // reader.readSequence();
+            // console.log('Sequence len: ' + reader.length);
+            // if (reader.peek() === Ber.Boolean)
+            //     console.log(reader.readBoolean());
             // Split incoming data into messages around TERM
             // var info = data.toString().split(self.TERM);
             //
