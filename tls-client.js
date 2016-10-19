@@ -74,7 +74,8 @@ var TLSClient = function (host, port) {
             if (!self.s.authorized) {
                 console.log("TLS authorization error:", self.s.authorizationError);
             }
-            // console.log(s.getPeerCertificate());
+             console.log('cert:', self.s.getPeerCertificate());
+             console.log('protocol:', self.s.getProtocol());
         });
 
         self.s.on("error", function (err) {
@@ -82,6 +83,7 @@ var TLSClient = function (host, port) {
         });
 
         self.s.on("data", function (data) {
+<<<<<<< HEAD
             console.log(data);
             console.log(data.toString());
             var fromber=org.pkijs.fromBER(bufferToArrayBuffer(data));
@@ -93,6 +95,17 @@ var TLSClient = function (host, port) {
             // console.log('Sequence len: ' + reader.length);
             // if (reader.peek() === Ber.Boolean)
             //     console.log(reader.readBoolean());
+=======
+            var reader = new Ber.Reader(data);
+
+            reader.readSequence();
+            console.log('Sequence len: ' + reader.length);
+            if (reader.peek() === Ber.Boolean)
+                console.log('bool:', reader.readBoolean());
+            if (reader.peek() === Ber.Integer)
+                console.log('int:', reader.readInt());
+            
+>>>>>>> 89c475a294c4590fa5eab20487ed87df4ce0811e
             // Split incoming data into messages around TERM
             // var info = data.toString().split(self.TERM);
             //

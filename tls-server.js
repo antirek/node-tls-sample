@@ -64,9 +64,17 @@ var message = {
     longitude: 24.9375,
     seqNo: 0
 };
+<<<<<<< HEAD
 // var writer = new Ber.Writer();
 //
 // writer.startSequence();
+=======
+
+
+var writer = new Ber.Writer();
+
+writer.startSequence();
+>>>>>>> 89c475a294c4590fa5eab20487ed87df4ce0811e
 // writer.writeBoolean(true);
 // writer.writeInt(6);
 // writer.endSequence();
@@ -74,6 +82,18 @@ var sequence = new org.pkijs.asn1.SEQUENCE();
 sequence.value_block.value.push(new org.pkijs.asn1.INTEGER({value: 12}));
 
 var sequence_buffer = sequence.toBER(false);
+
+function ab2str(buf) {
+  return String.fromCharCode.apply(null, new Uint16Array(buf));
+}
+
+function hex2a(hexx) {
+    var hex = hexx.toString();//force conversion
+    var str = '';
+    for (var i = 0; i < hex.length; i += 2)
+        str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+    return str;
+}
 
 // A secure (TLS) socket server.
 tls.createServer(options, function (s) {
@@ -101,7 +121,13 @@ tls.createServer(options, function (s) {
         // message.date = new Date();
         // ms += JSON.stringify(message) + TERM;
         // message.seqNo += 1;
+<<<<<<< HEAD
         s.write(arrayBufferToBuffer(sequence_buffer));
+=======
+        var hex = Buffer.from(writer.buffer).toString('hex')
+        console.log(hex, hex2a(hex));
+        s.write(writer.buffer);
+>>>>>>> 89c475a294c4590fa5eab20487ed87df4ce0811e
         // if ((message.seqNo % 100) === 0) {
         //     console.log(process.memoryUsage());
         // }
