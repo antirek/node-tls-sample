@@ -17,22 +17,25 @@ var tls = require('tls'),
     util = require('util'),
     events = require('events');
 
-var merge = require("node.extend");
+var asn = require('asn1.js');
 
-var common = require("asn1js/org/pkijs/common");
-var _asn1js = require("asn1js");
-var _pkijs = require("pkijs");
-var _x509schema = require("pkijs/org/pkijs/x509_schema");
+var Human = asn.define('Human', function () {
+    this.seq().obj(
+        this.key('firstName').octstr(),
+        this.key('lastName').octstr(),
+        this.key('age').int(),
+        this.key('gender').enum({0: 'male', 1: 'female'}),
+        this.key('bio').seqof(Bio)
+    );
+});
 
-// #region Merging function/object declarations for ASN1js and PKIjs
-var asn1js = merge(true, _asn1js, common);
+var Bio = asn.define('Bio', function () {
+    this.seq().obj(
+        this.key('time').gentime(),
+        this.key('description').octstr()
+    );
+});
 
-var x509schema = merge(true, _x509schema, asn1js);
-
-var pkijs_1 = merge(true, _pkijs, asn1js);
-var pkijs = merge(true, pkijs_1, x509schema);
-var org = pkijs.org;
-var bufferToArrayBuffer = require('buffer-to-arraybuffer');
 
 // TLS Client object
 var TLSClient = function (host, port) {
@@ -74,8 +77,8 @@ var TLSClient = function (host, port) {
             if (!self.s.authorized) {
                 console.log("TLS authorization error:", self.s.authorizationError);
             }
-             console.log('cert:', self.s.getPeerCertificate());
-             console.log('protocol:', self.s.getProtocol());
+            console.log('cert:', self.s.getPeerCertificate());
+            console.log('protocol:', self.s.getProtocol());
         });
 
         self.s.on("error", function (err) {
@@ -83,29 +86,9 @@ var TLSClient = function (host, port) {
         });
 
         self.s.on("data", function (data) {
-<<<<<<< HEAD
-            console.log(data);
-            console.log(data.toString());
-            var fromber=org.pkijs.fromBER(bufferToArrayBuffer(data));
-            console.log('fromber',fromber.result.value_block.value[0].value_block.value_dec);
-            //
-            // var reader = new Ber.Reader(data);
-            //
-            // reader.readSequence();
-            // console.log('Sequence len: ' + reader.length);
-            // if (reader.peek() === Ber.Boolean)
-            //     console.log(reader.readBoolean());
-=======
-            var reader = new Ber.Reader(data);
 
-            reader.readSequence();
-            console.log('Sequence len: ' + reader.length);
-            if (reader.peek() === Ber.Boolean)
-                console.log('bool:', reader.readBoolean());
-            if (reader.peek() === Ber.Integer)
-                console.log('int:', reader.readInt());
-            
->>>>>>> 89c475a294c4590fa5eab20487ed87df4ce0811e
+            var human = Human.decode(data, 'der');
+            console.log(human);
             // Split incoming data into messages around TERM
             // var info = data.toString().split(self.TERM);
             //

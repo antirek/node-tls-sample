@@ -14,23 +14,24 @@
 // Modules used here
 var tls = require('tls'),
     fs = require('fs');
-var Ber = require('asn1').Ber;
-var merge = require("node.extend");
 
-var common = require("asn1js/org/pkijs/common");
-var _asn1js = require("asn1js");
-var _pkijs = require("pkijs");
-var _x509schema = require("pkijs/org/pkijs/x509_schema");
+var asn = require('asn1.js');
+var Human = asn.define('Human', function() {
+    this.seq().obj(
+        this.key('firstName').octstr(),
+        this.key('lastName').octstr(),
+        this.key('age').int(),
+        this.key('gender').enum({ 0: 'male', 1: 'female' }),
+        this.key('bio').seqof(Bio)
+    );
+});
 
-// #region Merging function/object declarations for ASN1js and PKIjs
-var asn1js = merge(true, _asn1js, common);
-
-var x509schema = merge(true, _x509schema, asn1js);
-
-var pkijs_1 = merge(true, _pkijs, asn1js);
-var pkijs = merge(true, pkijs_1, x509schema);
-var org = pkijs.org;
-var arrayBufferToBuffer = require('arraybuffer-to-buffer')
+var Bio = asn.define('Bio', function() {
+    this.seq().obj(
+        this.key('time').gentime(),
+        this.key('description').octstr()
+    );
+});
 var TERM = '\uFFFD';
 
 var options = {
@@ -64,24 +65,20 @@ var message = {
     longitude: 24.9375,
     seqNo: 0
 };
-<<<<<<< HEAD
-// var writer = new Ber.Writer();
-//
-// writer.startSequence();
-=======
 
+var buffer = Human.encode({
+    firstName: 'Thomas',
+    lastName: 'Anderson',
+    age: 28,
+    gender: 'male',
+    bio: [
+        {
+            time: +new Date('31 March 1999'),
+            description: 'freedom of mind'
+        }
+    ]
+}, 'der');
 
-var writer = new Ber.Writer();
-
-writer.startSequence();
->>>>>>> 89c475a294c4590fa5eab20487ed87df4ce0811e
-// writer.writeBoolean(true);
-// writer.writeInt(6);
-// writer.endSequence();
-var sequence = new org.pkijs.asn1.SEQUENCE();
-sequence.value_block.value.push(new org.pkijs.asn1.INTEGER({value: 12}));
-
-var sequence_buffer = sequence.toBER(false);
 
 function ab2str(buf) {
   return String.fromCharCode.apply(null, new Uint16Array(buf));
@@ -113,7 +110,6 @@ tls.createServer(options, function (s) {
 
 
     //console.log(s.getPeerCertificate());
-
     intervalId = setInterval(function () {
         // message.date = new Date();
         // var ms = JSON.stringify(message) + TERM;
@@ -121,13 +117,7 @@ tls.createServer(options, function (s) {
         // message.date = new Date();
         // ms += JSON.stringify(message) + TERM;
         // message.seqNo += 1;
-<<<<<<< HEAD
-        s.write(arrayBufferToBuffer(sequence_buffer));
-=======
-        var hex = Buffer.from(writer.buffer).toString('hex')
-        console.log(hex, hex2a(hex));
-        s.write(writer.buffer);
->>>>>>> 89c475a294c4590fa5eab20487ed87df4ce0811e
+        s.write(buffer);
         // if ((message.seqNo % 100) === 0) {
         //     console.log(process.memoryUsage());
         // }
