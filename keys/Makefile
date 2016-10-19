@@ -6,7 +6,7 @@ all: agent1-cert.pem agent2-cert.pem
 # ('password' is used for the CA password.)
 #
 ca1-cert.pem: ca1.cnf
-	openssl req -new -x509 -days 9000 -config ca1.cnf -keyout ca1-key.pem -out ca1-cert.pem
+	openssl req -new -x509 -days 19000 -config ca1.cnf -keyout ca1-key.pem -out ca1-cert.pem
 
 
 
@@ -22,7 +22,7 @@ agent1-csr.pem: agent1.cnf agent1-key.pem
 
 agent1-cert.pem: agent1-csr.pem ca1-cert.pem ca1-key.pem
 	openssl x509 -req \
-		-days 9000 \
+		-days 19000 \
 		-passin "pass:password" \
 		-in agent1-csr.pem \
 		-CA ca1-cert.pem \
@@ -47,7 +47,7 @@ agent2-csr.pem: agent2.cnf agent2-key.pem
 
 agent2-cert.pem: agent2-csr.pem ca1-cert.pem ca1-key.pem
 	openssl x509 -req \
-		-days 9000 \
+		-days 19000 \
 		-passin "pass:password" \
 		-in agent2-csr.pem \
 		-CA ca1-cert.pem \

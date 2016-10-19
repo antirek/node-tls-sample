@@ -1,6 +1,6 @@
 #!/bin/sh
 
-DAYS=$((3*365))
+DAYS=$((6*365))
 LEVELS=4
 DN="/C=US/ST=Florida/L=Miami/O=Example Corp./OU=PKI"
 CHAIN=chain.crt

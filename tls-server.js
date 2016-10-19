@@ -32,10 +32,7 @@ tls.createServer(options, function (s) {
     console.log("Remote port: ", s.remotePort);
 
     s.on('data', function (data) {
-        var test=models.ConnectResponse.decode(data, 'der');
-        for (var key in test) {
-            console.log(test[key].toString());
-        }
+        
         var ConnectRequest = models.ConnectRequest.decode(data, 'der');
         for (var key in ConnectRequest) {
             console.log(ConnectRequest[key].toString());
@@ -44,9 +41,11 @@ tls.createServer(options, function (s) {
             'confirmed-data-packet-window-size': ConnectRequest['data-packet-window-size'],
             'confirmed-session-timeout': ConnectRequest['session-timeout'],
             'confirmed-data-load-timeout': ConnectRequest['data-load-timeout'],
-            'confirmed-request-response-timeout': ConnectRequest['request-response-timeout']
+            'confirmed-request-response-timeout': ConnectRequest['request-response-timeout'],
+            'supports': [{name: 'Good'}]
         }, 'der');
         s.write(ConnectResponse)
+        console.log('connectresponse', ConnectResponse.toString('hex'));
     });
 
     s.on("error", function (err) {
