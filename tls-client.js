@@ -1,10 +1,10 @@
 "use strict";
+
 var tls = require('tls');
 var fs = require('fs');
 var util = require('util');
 var events = require('events');
 var models = require('./models');
-
 
 var TLSClient = function (host, port) {
 
@@ -16,10 +16,11 @@ var TLSClient = function (host, port) {
             fs.readFileSync('ssl/ca3-cert.pem'),
             fs.readFileSync('ssl/ca4-cert.pem')
         ],
-        key: fs.readFileSync('ssl/agent2-key.pem'),
-        cert: fs.readFileSync('ssl/agent2-cert.pem'),
-        rejectUnauthorized: false             // Set false to see what happens.
+        key: fs.readFileSync('ssl/agent2-key.pem'),      //private
+        cert: fs.readFileSync('ssl/agent2-cert.pem'),    //public
+        rejectUnauthorized: true                         // Set false to see what happens.
     };
+
     var self = this;
     events.EventEmitter.call(this);
 
@@ -31,29 +32,31 @@ var TLSClient = function (host, port) {
             if (!self.s.authorized) {
                 console.log("TLS authorization error:", self.s.authorizationError);
             }
+
             console.log('cert:', self.s.getPeerCertificate());
             console.log('protocol:', self.s.getProtocol());
         });
 
         self.s.on("error", function (err) {
-            console.log("Eeek:", err.toString());
+            console.log("Error:", err.toString());
         });
 
         self.s.on("data", function (data) {
-            var ConnectResponse = models.ConnectResponse.decode(data,'der');
+            var ConnectResponse = models.ConnectResponse.decode(data, 'der');
             console.log('ConnectResponse', ConnectResponse);
         });
 
         self.s.on("end", function () {
-            console.log("End:");
+            console.log("End");
         });
 
         self.s.on("close", function () {
-            console.log("Close:");
+            console.log("Close");
             self.emit('disconnect', null);
         });
     })();
 };
+
 util.inherits(TLSClient, events.EventEmitter);
 
 TLSClient.prototype.write = function (message) {
@@ -63,8 +66,3 @@ TLSClient.prototype.write = function (message) {
 };
 
 module.exports = TLSClient;
-
-
-
-
-

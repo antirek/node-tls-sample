@@ -23,7 +23,7 @@ c1.on('disconnect', function (err) {
 });
 
 c1.on('message', function (message) {
-    console.log('message', 'message');
+    console.log('message', message);
 });
 
 console.log('STARTED');

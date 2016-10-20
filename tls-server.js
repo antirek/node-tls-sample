@@ -12,16 +12,18 @@ var options = {
         fs.readFileSync('ssl/ca3-cert.pem'),
         fs.readFileSync('ssl/ca4-cert.pem')
     ],
-    key: fs.readFileSync('ssl/agent1-key.pem'),
-    cert: fs.readFileSync('ssl/agent1-cert.pem'),
+    key: fs.readFileSync('ssl/agent1-key.pem'),         //private
+    cert: fs.readFileSync('ssl/agent1-cert.pem'),       //public
     requestCert: true,
-    rejectUnauthorized: false
+    rejectUnauthorized: true
 };
+
 var models = require('./models');
 
 tls.createServer(options, function (s) {
 
     console.log("TLS Client authorized:", s.authorized);
+
     if (!s.authorized) {
         console.log("TLS authorization error:", s.authorizationError);
     }
@@ -49,15 +51,14 @@ tls.createServer(options, function (s) {
     });
 
     s.on("error", function (err) {
-        console.log("Eeek:", err.toString());
+        console.log("Error:", err.toString());
     });
 
     s.on("end", function () {
-        console.log("End:");
+        console.log("End");
     });
 
     s.on("close", function () {
-
-        console.log("Close:");
+        console.log("Close");
     });
 }).listen(8000);
