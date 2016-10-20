@@ -3,7 +3,7 @@
 var TLSClient = require('./tls-client.js');
 var models = require('./models');
 
-var c1 = new TLSClient('localhost', 8000);
+var c1 = new TLSClient('agent1', 8000);
 
 c1.on('connect', function (err) {
     console.log('Client connected.');
